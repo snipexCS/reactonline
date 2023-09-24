@@ -1,35 +1,38 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AiOutlineShoppingCart } from "react-icons/ai";
 import Order from "./Order";
 
-const showOrders = (props) => {
-  let sum = 0;
+function CartItems(props) {
 
-  props.orders.forEach((el) => {
-    sum += Number.parseFloat(el.price);
-  });
+  const [ sum, setSum ] = useState(0);
+
+  useEffect(() => {
+    const orderSum = props.orders.reduce((prev, curr) => {
+      return prev + Number.parseFloat(curr.price);
+    }, 0);
+    setSum(orderSum);
+  }, [props.orders])
+
+
+  const ShowNothing = () => {
+    return (
+      <div className="empty">
+        <h2>Нет товаров</h2>
+      </div>
+    );
+  };
 
   return (
-    <div>
-      {props.orders.map((el) => (
-        <Order onDelete={props.onDelete} key={el.id} item={el} />
-      ))}
-
-      <p className="summa"> Сумма :{sum} $</p>
+    <div className="shop-cart">
+      {props.orders.map((el) => <Order key={el.id} item={el} />)}
+      {sum > 0 && <p className="summa"> Сумма :{sum} $</p>}
+      {!props.orders.length && <ShowNothing />}
     </div>
-  );
-};
-
-const showNothing = () => {
-  return (
-    <div className="empty">
-      <h2>Нет товаров</h2>
-    </div>
-  );
-};
+  )
+}
 
 export default function Header(props) {
-  let [cartOpen, setCartOpen] = useState(false);
+  const [cartIsOpen, setCartOpen] = useState(false);
 
   return (
     <header>
@@ -41,14 +44,10 @@ export default function Header(props) {
           <li>Cabinet</li>
         </ul>
         <AiOutlineShoppingCart
-          onClick={() => setCartOpen((cartOpen = !cartOpen))}
-          className={`shop-cart-button ${cartOpen && "active"}`}
+          onClick={() => setCartOpen(!cartIsOpen)}
+          className={`shop-cart-button ${cartIsOpen && "active"}`}
         />
-        {cartOpen && (
-          <div className="shop-cart">
-            {props.orders.length > 0 ? showOrders(props) : showNothing()}
-          </div>
-        )}
+        { cartIsOpen ? <CartItems orders={props.orders} /> : <></> }
       </div>
       <div className="presentation"></div>
     </header>
