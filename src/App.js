@@ -1,39 +1,81 @@
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import React, { useState } from "react";
-import Items from "./components/Items";
-import { ShopContext } from "./components/ShopContext";
-import { itemList } from './components/ItemList';
+import { useState } from "react";
+
+import Navigation from "./Navigation/Nav";
+import Products from "./Products/Products";
+import products from "./db/data";
+import Recommended from "./Recommended/Recommended";
+import Sidebar from "./Sidebar/Sidebar";
+import Card from "./components/Card";
+import "./index.css";
 
 function App() {
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
-const [orders, setOrders] = useState([])
+  
+  const [query, setQuery] = useState("");
 
-function deleteOrder(id){
-  setOrders(orders.filter(el=> el.id !== id ))
-}
+  const handleInputChange = (event) => {
+    setQuery(event.target.value);
+  };
 
-function  addToOrder(item){
-  const isDuplicate = orders.find(order => order.id === item.id);
-  if (!isDuplicate) {
-    setOrders([...orders, item])
+  const filteredItems = products.filter(
+    (product) => product.title.toLowerCase().indexOf(query.toLowerCase()) !== -1
+  );
+
+  
+  const handleChange = (event) => {
+    setSelectedCategory(event.target.value);
+  };
+
+  
+  const handleClick = (event) => {
+    setSelectedCategory(event.target.value);
+  };
+
+  function filteredData(products, selected, query) {
+    let filteredProducts = products;
+
+    // Filtering Input Items
+    if (query) {
+      filteredProducts = filteredItems;
+    }
+
+    // Applying selected filter
+    if (selected) {
+      filteredProducts = filteredProducts.filter(
+        ({ category, color, company, newPrice, title }) =>
+          category === selected ||
+          color === selected ||
+          company === selected ||
+          newPrice === selected ||
+          title === selected
+      );
+    }
+
+    return filteredProducts.map(
+      ({ img, title, star, reviews, prevPrice, newPrice }) => (
+        <Card
+          key={Math.random()}
+          img={img}
+          title={title}
+          star={star}
+          reviews={reviews}
+          prevPrice={prevPrice}
+          newPrice={newPrice}
+        />
+      )
+    );
   }
-}
 
-const printItems = () => {
-  console.warn(itemList);
-}
+  const result = filteredData(products, selectedCategory, query);
 
   return (
-    <ShopContext.Provider value={{
-      deleteOrder, addToOrder, printItems
-    }}>
-      <div className="wrapper">
-        <Header orders={orders} />
-        <Items items={itemList} />
-        <Footer />
-      </div>
-    </ShopContext.Provider>
+    <>
+      <Sidebar handleChange={handleChange} />
+      <Navigation query={query} handleInputChange={handleInputChange} />
+      <Recommended handleClick={handleClick} />
+      <Products result={result} />
+    </>
   );
 }
 
